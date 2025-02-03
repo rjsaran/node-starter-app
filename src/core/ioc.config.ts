@@ -17,19 +17,38 @@ import { HttpService } from "./services/http.service";
 
 export const container = new Container();
 
-container.bind<Server>(TYPES.Server).to(Server);
-container.bind<ConfigService>(TYPES.ConfigService).to(ConfigService);
-container.bind<LoggerService>(TYPES.LoggerService).to(LoggerService);
-
-container.bind<ErrorMiddleware>(ErrorMiddleware).toSelf();
-container.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware);
+container.bind<Server>(TYPES.Server).to(Server).inSingletonScope();
 
 container
-  .bind<IDatabaseService>(TYPES.IDatabaseService)
-  .to(PostgresDatabaseService);
+  .bind<ConfigService>(TYPES.ConfigService)
+  .to(ConfigService)
+  .inSingletonScope();
 
-container.bind<IAuthService>(TYPES.IAuthService).to(AuthService);
-container.bind<IUserService>(TYPES.IUserService).to(UserService);
+container
+  .bind<LoggerService>(TYPES.LoggerService)
+  .to(LoggerService)
+  .inSingletonScope();
+
+container.bind<ErrorMiddleware>(ErrorMiddleware).toSelf().inSingletonScope();
+container
+  .bind<IDatabaseService>(TYPES.IDatabaseService)
+  .to(PostgresDatabaseService)
+  .inSingletonScope();
+
+container
+  .bind<AuthMiddleware>(TYPES.AuthMiddleware)
+  .to(AuthMiddleware)
+  .inRequestScope();
+
+container
+  .bind<IAuthService>(TYPES.IAuthService)
+  .to(AuthService)
+  .inRequestScope();
+
+container
+  .bind<IUserService>(TYPES.IUserService)
+  .to(UserService)
+  .inRequestScope();
 
 container.bind<HttpService>(TYPES.APIServiceA).toDynamicValue((context) => {
   const configService = context.container.get<ConfigService>(

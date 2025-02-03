@@ -26,7 +26,7 @@ export class Server {
     @inject(TYPES.ConfigService)
     private readonly config: ConfigService
   ) {
-    this.__setupExpressApp();
+    this._expressApp = this.__setupExpressApp();
   }
 
   private __setupExpressApp() {
@@ -46,7 +46,7 @@ export class Server {
         app.use(errorMiddleware());
       });
 
-    this._expressApp = server.build();
+    return server.build();
   }
 
   public get expressApp(): express.Application {

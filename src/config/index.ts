@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 const config = {
   app_name: "Node Starter App",

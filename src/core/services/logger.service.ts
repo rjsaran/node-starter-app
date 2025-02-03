@@ -1,13 +1,15 @@
 import { injectable } from "inversify";
-import { format, createLogger, transports } from "winston";
+import { format, createLogger, transports, Logger } from "winston";
 
 const { colorize, combine, json, label, printf, timestamp } = format;
 
 @injectable()
 export class LoggerService {
-  private readonly logger;
+  private static logger: Logger;
 
   constructor() {
+    if (LoggerService.logger) return;
+
     const consoleTransport = new transports.Console({
       format: combine(
         colorize({
@@ -25,7 +27,7 @@ export class LoggerService {
       format: combine(json()),
     });
 
-    this.logger = createLogger({
+    LoggerService.logger = createLogger({
       level: "info",
       format: combine(
         label({ label: `[Application]` }),
@@ -42,10 +44,10 @@ export class LoggerService {
   }
 
   public info(message: string) {
-    this.logger.info(message);
+    LoggerService.logger.info(message);
   }
 
   public error(message: string) {
-    this.logger.error(message);
+    LoggerService.logger.error(message);
   }
 }
