@@ -6,22 +6,30 @@ import {
   requestBody,
 } from "inversify-express-utils";
 
-import { LoginDto } from "../dto/login.dto";
-import { AuthService } from "../services/auth.service";
 import { TYPES } from "../../../core/types";
 import { validateBody } from "../../../core/middleware/body-validator.middeware";
-import { LoginResponseDto } from "../dto/login.response.dto";
+import { GenerateTokenDTO } from "../auth.dto";
+import { IAuthService } from "../interfaces/auth.service.interface";
 
 @controller("/auth")
 export class AuthController extends BaseHttpController {
   constructor(
-    @inject(TYPES.IAuthService) private readonly authService: AuthService
+    @inject(TYPES.IAuthService) private readonly authService: IAuthService
   ) {
     super();
   }
 
-  @httpPost("/login", validateBody(LoginDto))
-  login(@requestBody() dto: LoginDto): Promise<LoginResponseDto> {
-    return this.authService.login(dto);
+  @httpPost("/token", validateBody(GenerateTokenDTO))
+  async generate(@requestBody() dto: GenerateTokenDTO) {
+    const { client_id, client_secret } = dto;
+
+    const accessToken = await this.authService.generateToken(
+      client_id,
+      client_secret
+    );
+
+    return {
+      access_token: accessToken,
+    };
   }
 }

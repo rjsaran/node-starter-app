@@ -1,0 +1,18 @@
+# Use Node.js as base image
+FROM node:18
+
+# Set working directory
+WORKDIR /client
+
+# Copy package.json and install dependencies
+COPY package*.json ./
+RUN npm install --only=production
+
+# Copy the rest of the application
+COPY . .
+
+# Expose the client port
+EXPOSE 3000
+
+# Start the React app
+CMD ["npm", "run", "start"]

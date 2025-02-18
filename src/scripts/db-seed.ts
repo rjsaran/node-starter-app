@@ -3,10 +3,12 @@ import "reflect-metadata";
 import { Client } from "pg";
 import { container } from "../core/ioc.config";
 
-import { User } from "../app/auth/entities/user.entity";
-import { IDatabaseService } from "../core/interfaces/database.service.interface";
 import { TYPES } from "../core/types";
 import { ConfigService } from "../config";
+import { IDatabaseService } from "../core/interfaces/database.service.interface";
+import { AppClient } from "../app/auth/auth.entity";
+import { ZERO_UUID } from "../core/constants";
+import { HashUtils } from "../utils/hash.utils";
 
 export const createDatabase = async (database?: string) => {
   const configService = container.get<ConfigService>(TYPES.ConfigService);
@@ -35,17 +37,15 @@ export const createDatabase = async (database?: string) => {
 
 export const seedDatabase = async () => {
   const databaseService = container.get<IDatabaseService>(
-    TYPES.IDatabaseService
+    TYPES.DatabaseService
   );
-
-  const userRepository = await databaseService.getRepository(User);
-
-  await userRepository.upsert(
+  const repository = await databaseService.getRepository(AppClient);
+  await repository.upsert(
     {
-      email: "account@nodestarterapp.com",
-      password: "account@123",
+      id: ZERO_UUID,
+      secret_hash: HashUtils.createSha256(ZERO_UUID),
     },
-    ["email"]
+    ["id"]
   );
 };
 

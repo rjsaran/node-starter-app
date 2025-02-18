@@ -5,4 +5,5 @@ export interface IDatabaseService {
   getRepository<T extends ObjectLiteral>(
     entity: EntityTarget<T>
   ): Promise<Repository<T>>;
+  closeConnection(): Promise<void>;
 }

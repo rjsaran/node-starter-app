@@ -28,6 +28,7 @@ export class ErrorMiddleware {
       const internalServerException = new InternalServerException();
 
       this.logger.error(exception);
+      console.log(exception);
 
       return res
         .status(internalServerException.statusCode)

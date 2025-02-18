@@ -6,11 +6,15 @@ import { ValidationException } from "../exception";
 export function validateBody(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dto: ClassConstructor<any>,
-  skipMissingProperties = false
+  skipMissingProperties = false,
+  forbidUnknownValues = false
 ) {
   return async (req: Request, _res: Response, next: NextFunction) => {
     const dtoObj = plainToClass(dto, req.body);
-    const errors = await validate(dtoObj, { skipMissingProperties });
+    const errors = await validate(dtoObj, {
+      skipMissingProperties,
+      forbidUnknownValues,
+    });
 
     if (errors.length > 0) {
       const errorMessages = errors

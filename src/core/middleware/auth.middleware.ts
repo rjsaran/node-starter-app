@@ -6,27 +6,24 @@ import { TYPES } from "../types";
 import { IAuthService } from "../../app/auth/interfaces/auth.service.interface";
 import { UnauthorizedException } from "../exception";
 
-export type AuthUser = {
-  id: string;
-  email: string;
-};
-
-export type ReqWithUser = Request & { user?: AuthUser };
-
 @injectable()
 export class AuthMiddleware extends BaseMiddleware {
   @inject(TYPES.IAuthService) private readonly authService: IAuthService;
 
-  public async handler(req: ReqWithUser, _res: Response, next: NextFunction) {
+  public async handler(req: Request, _res: Response, next: NextFunction) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
-    if (!token) throw new UnauthorizedException();
+    if (!token) {
+      return next(new UnauthorizedException());
+    }
 
     try {
-      const userData = (await this.authService.verifyToken(token)) as AuthUser;
+      const isVerified = await this.authService.validateToken(token);
 
-      req.user = userData;
+      if (!isVerified) {
+        throw new UnauthorizedException();
+      }
     } catch (err) {
       return next(err);
     }

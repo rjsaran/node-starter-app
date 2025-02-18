@@ -5,9 +5,8 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 export class HttpService {
   private axiosInstance: AxiosInstance;
 
-  constructor(baseURL: string) {
+  constructor() {
     this.axiosInstance = axios.create({
-      baseURL: baseURL,
       timeout: 10000,
     });
   }

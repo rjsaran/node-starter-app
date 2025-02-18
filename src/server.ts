@@ -3,6 +3,8 @@ import { container } from "./core/ioc.config";
 
 import { InversifyExpressServer } from "inversify-express-utils";
 
+import cors from "cors";
+import path from "path";
 import bodyParser from "body-parser";
 import express from "express";
 import morgan from "morgan";
@@ -13,7 +15,8 @@ import { ConfigService } from "./config";
 import { LoggerService } from "./core/services/logger.service";
 import errorMiddleware from "./core/middleware/error.middleware";
 
-import "./app/auth/controllers/auth.controller";
+import "./app/auth/controllers";
+import "./app/ledger/controllers";
 import { TYPES } from "./core/types";
 
 @injectable()
@@ -41,6 +44,13 @@ export class Server {
         app.use(bodyParser.json());
 
         app.use(morgan("combined"));
+
+        // Enable CORS for all routes
+        app.use(cors());
+
+        // Serve static files from React's build directory
+        // Assuming React's build directory is under the root path 'client/build'
+        app.use(express.static(path.join(__dirname, "../client/build")));
       })
       .setErrorConfig((app) => {
         app.use(errorMiddleware());

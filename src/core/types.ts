@@ -1,14 +1,21 @@
+import { CURRENCY_PRECISION } from "./constants";
+
 export const TYPES = {
   Server: Symbol.for("Server"),
   ConfigService: Symbol.for("ConfigService"),
   LoggerService: Symbol.for("LoggerService"),
 
-  AuthMiddleware: Symbol.for("AuthMiddleware"),
-  IDatabaseService: Symbol.for("IDatabaseService"),
-  IAuthRepository: Symbol.for("IAuthRepository"),
+  DatabaseService: Symbol.for("DatabaseService"),
 
   IAuthService: Symbol.for("IAuthService"),
-  IUserService: Symbol.for("IUserService"),
 
-  APIServiceA: Symbol.for("APIServiceA"),
+  AuthMiddleware: Symbol.for("AuthMiddleware"),
+
+  LedgerService: Symbol.for("LedgerService"),
+  LedgerAccountService: Symbol.for("LedgerAccountService"),
+  LedgerTransactionService: Symbol.for("LedgerTransactionService"),
+  LedgerEntryService: Symbol.for("LedgerEntryService"),
+  LedgerReportService: Symbol.for("LedgerReportService"),
 };
+
+export type CurrencyCode = keyof typeof CURRENCY_PRECISION;

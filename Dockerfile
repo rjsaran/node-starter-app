@@ -8,7 +8,7 @@ WORKDIR /www-data
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --only=production
 
 # Copy the rest of the application code to the working directory
 COPY . .
@@ -17,6 +17,6 @@ COPY . .
 RUN npm run build
 
 # Expose the port your application runs on
-EXPOSE 3000
+EXPOSE 4000
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]

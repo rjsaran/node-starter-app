@@ -12,14 +12,14 @@ let connection: DataSource;
 
 beforeAll(async () => {
   // TODO: use .env.test file instead
-  await createDatabase("testdb");
+  await createDatabase("ledger_test");
 
   container
-    .rebind<IDatabaseService>(TYPES.IDatabaseService)
+    .rebind<IDatabaseService>(TYPES.DatabaseService)
     .to(TestDatabaseService);
 
   const databaseService = container.get<IDatabaseService>(
-    TYPES.IDatabaseService
+    TYPES.DatabaseService
   );
 
   connection = await databaseService.getConnection();

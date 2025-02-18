@@ -1,69 +1,73 @@
 import { inject, injectable } from "inversify";
-import jwt from "jsonwebtoken";
+import { Repository } from "typeorm";
+import { sign, verify } from "jsonwebtoken";
 
-import { LoginDto } from "../dto/login.dto";
-import { ConfigService } from "../../../config";
+import { AppClient } from "../auth.entity";
 import { TYPES } from "../../../core/types";
+import { IDatabaseService } from "../../../core/interfaces/database.service.interface";
 import { UnauthorizedException } from "../../../core/exception";
-import { IAuthService, JwtConfig } from "../interfaces/auth.service.interface";
+import { ConfigService } from "../../../config";
 import { LoggerService } from "../../../core/services/logger.service";
-import { AuthUser } from "../../../core/middleware/auth.middleware";
-import { IUserService } from "../interfaces/user.service.interface";
-import { LoginResponseDto } from "../dto/login.response.dto";
+import { IAuthService } from "../interfaces/auth.service.interface";
+import { HashUtils } from "../../../utils/hash.utils";
 
 @injectable()
 export class AuthService implements IAuthService {
+  private repository: Repository<AppClient>;
+
   constructor(
-    @inject(TYPES.IUserService)
-    private readonly userService: IUserService,
+    @inject(TYPES.DatabaseService)
+    private readonly databaseService: IDatabaseService,
     @inject(TYPES.ConfigService)
-    private readonly config: ConfigService,
+    private readonly configService: ConfigService,
     @inject(TYPES.LoggerService)
     private readonly logger: LoggerService
   ) {}
 
-  private generateToken(payload: AuthUser, config: JwtConfig): string {
-    return jwt.sign(payload, config.secret, {
-      expiresIn: config.expiresIn,
-    });
+  private async getRepository(): Promise<Repository<AppClient>> {
+    if (!this.repository) {
+      this.repository = await this.databaseService.getRepository(AppClient);
+    }
+
+    return this.repository;
   }
 
-  async login(dto: LoginDto): Promise<LoginResponseDto> {
-    const user = await this.userService.getUserByEmail(dto.email);
+  async generateToken(clientId: string, clientSecret: string): Promise<string> {
+    const repository = await this.getRepository();
 
-    if (!user.validatePassword(dto.password)) {
+    const client = await repository.findOne({
+      where: { id: clientId, is_active: true },
+    });
+
+    if (!client) {
       throw new UnauthorizedException();
     }
 
-    const payload: AuthUser = {
-      id: user.id,
-      email: user.email,
-    };
+    const hashedSecret = HashUtils.createSha256(clientSecret);
 
-    const config: JwtConfig = {
-      secret: this.config.auth.jwt.secret,
-      expiresIn: this.config.auth.jwt.expires_in,
-    };
+    if (client.secret_hash !== hashedSecret) {
+      throw new UnauthorizedException();
+    }
 
-    const accessToken = this.generateToken(payload, config);
+    const accessToken = sign(
+      { client_id: client.id },
+      this.configService.auth.jwt.secret,
+      {
+        expiresIn: this.configService.auth.jwt.expires_in,
+      }
+    );
 
-    return {
-      accessToken: accessToken,
-    };
+    return accessToken;
   }
 
-  verifyToken(token: string): AuthUser {
+  validateToken(token: string): boolean {
     try {
-      const authUser = jwt.verify(
-        token,
-        this.config.auth.jwt.secret
-      ) as AuthUser;
+      const decoded = verify(token, this.configService.auth.jwt.secret);
+      return !!decoded;
+    } catch (e) {
+      this.logger.error(`Error validating token ${e}`);
 
-      return authUser;
-    } catch (err) {
-      this.logger.error(err);
-
-      throw new UnauthorizedException();
+      return false;
     }
   }
 }

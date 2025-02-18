@@ -13,7 +13,7 @@ const config = {
   auth: {
     jwt: {
       secret: process.env.JWT_SECRET || "",
-      expires_in: 24 * 60 * 60, // 24 Hours
+      expires_in: (Number(process.env.JWT_EXPIRY_IN_MINUTES) || 60) * 60, // Default: 1 Hours
     },
   },
 
@@ -24,12 +24,6 @@ const config = {
       user: process.env.POSTGRES_USER || "postgres",
       password: process.env.POSTGRES_PASSWORD || "",
       database: process.env.POSTGRES_DB,
-    },
-  },
-
-  api: {
-    service_a: {
-      base_url: process.env.SERVICE_A_BASE_URL || "http://api.service.a.com",
     },
   },
 };
@@ -62,9 +56,5 @@ export class ConfigService {
 
   get db() {
     return this.get("db");
-  }
-
-  get api() {
-    return this.get("api");
   }
 }

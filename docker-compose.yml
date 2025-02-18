@@ -1,5 +1,5 @@
 services:
-  app:
+  server:
     build:
       context: ./
       dockerfile: Dockerfile
@@ -10,6 +10,21 @@ services:
     depends_on:
       - database
     restart: always
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.client
+    container_name: ledger_client
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/client
+      - /client/node_modules
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - server
 
   database:
     image: postgres:15

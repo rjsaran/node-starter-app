@@ -8,12 +8,13 @@ import { ErrorMiddleware } from "./middleware/error.middleware";
 
 import { IDatabaseService } from "./interfaces/database.service.interface";
 import { PostgresDatabaseService } from "./services/postgres.database.service";
-import { IAuthService } from "../app/auth/interfaces/auth.service.interface";
-import { AuthService } from "../app/auth/services/auth.service";
 import { AuthMiddleware } from "./middleware/auth.middleware";
-import { IUserService } from "../app/auth/interfaces/user.service.interface";
-import { UserService } from "../app/auth/services/user.service";
-import { HttpService } from "./services/http.service";
+import { LedgerAccountService } from "../app/ledger/services/ledger-account.service";
+import { LedgerService } from "../app/ledger/services/ledger.service";
+import { AuthService } from "../app/auth/services/auth.service";
+import { LedgerTransactionService } from "../app/ledger/services/ledger-transaction.service";
+import { LedgerEntryService } from "../app/ledger/services/ledger-entry.service";
+import { LedgerReportService } from "../app/ledger/services/ledger-report.service";
 
 export const container = new Container();
 
@@ -30,8 +31,9 @@ container
   .inSingletonScope();
 
 container.bind<ErrorMiddleware>(ErrorMiddleware).toSelf().inSingletonScope();
+
 container
-  .bind<IDatabaseService>(TYPES.IDatabaseService)
+  .bind<IDatabaseService>(TYPES.DatabaseService)
   .to(PostgresDatabaseService)
   .inSingletonScope();
 
@@ -41,18 +43,31 @@ container
   .inRequestScope();
 
 container
-  .bind<IAuthService>(TYPES.IAuthService)
-  .to(AuthService)
-  .inRequestScope();
+  .bind<LedgerAccountService>(TYPES.LedgerAccountService)
+  .to(LedgerAccountService)
+  .inSingletonScope();
 
 container
-  .bind<IUserService>(TYPES.IUserService)
-  .to(UserService)
-  .inRequestScope();
+  .bind<LedgerService>(TYPES.LedgerService)
+  .to(LedgerService)
+  .inSingletonScope();
 
-container.bind<HttpService>(TYPES.APIServiceA).toDynamicValue((context) => {
-  const configService = context.container.get<ConfigService>(
-    TYPES.ConfigService
-  );
-  return new HttpService(configService.api.service_a.base_url);
-});
+container
+  .bind<LedgerTransactionService>(TYPES.LedgerTransactionService)
+  .to(LedgerTransactionService)
+  .inSingletonScope();
+
+container
+  .bind<LedgerEntryService>(TYPES.LedgerEntryService)
+  .to(LedgerEntryService)
+  .inSingletonScope();
+
+container
+  .bind<LedgerReportService>(TYPES.LedgerReportService)
+  .to(LedgerReportService)
+  .inSingletonScope();
+
+container
+  .bind<AuthService>(TYPES.IAuthService)
+  .to(AuthService)
+  .inSingletonScope();

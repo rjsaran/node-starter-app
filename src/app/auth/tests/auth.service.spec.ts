@@ -1,68 +1,69 @@
-import { LoginDto } from "../dto/login.dto";
 import { container } from "../../../core/ioc.config";
 import { TYPES } from "../../../core/types";
 import { IAuthService } from "../interfaces/auth.service.interface";
-import {
-  NotFoundException,
-  UnauthorizedException,
-} from "../../../core/exception";
+import { UnauthorizedException } from "../../../core/exception";
+import { ZERO_UUID } from "../../../core/constants";
 
 describe("Test: Auth Service", () => {
   let authService: IAuthService;
 
-  let userPayload: LoginDto = {
-    email: "account@nodestarterapp.com",
-    password: "account@123",
+  const clientPayload = {
+    id: ZERO_UUID,
+    secret: ZERO_UUID,
   };
 
   beforeEach(() => {
-    userPayload = {
-      email: "account@nodestarterapp.com",
-      password: "account@123",
-    };
-
     authService = container.get(TYPES.IAuthService);
   });
 
   describe("Login", () => {
-    it("Throw error: Invalid email", async () => {
-      userPayload.email = "account1@nodestarterapp.com";
-
-      await authService.login(userPayload).catch((error) => {
-        expect(error).toBeInstanceOf(NotFoundException);
-      });
+    it("Throw error: Invalid client Id", async () => {
+      await authService
+        .generateToken(
+          "00000000-0000-0000-0000-000000000001",
+          clientPayload.secret
+        )
+        .catch((error) => {
+          expect(error).toBeInstanceOf(UnauthorizedException);
+        });
     });
 
     it("Throw error: Invalid password", async () => {
-      userPayload.password = "account@124";
-
-      await authService.login(userPayload).catch((error) => {
-        expect(error).toBeInstanceOf(UnauthorizedException);
-      });
+      await authService
+        .generateToken(clientPayload.id, "Wrong")
+        .catch((error) => {
+          expect(error).toBeInstanceOf(UnauthorizedException);
+        });
     });
 
     it("Should return access token", async () => {
-      const response = await authService.login(userPayload);
+      const accessToken = await authService.generateToken(
+        clientPayload.id,
+        clientPayload.secret
+      );
 
-      expect(response).toBeDefined();
-      expect(response.accessToken).toBeDefined();
+      expect(accessToken).toBeDefined();
     });
   });
 
   describe("Verify token", () => {
-    it("Throw error: Invalid token", () => {
-      expect(() => authService.verifyToken("")).toThrow(UnauthorizedException);
+    it("Show return false", () => {
+      const isVerified = authService.validateToken("Invalid TOKEN");
+
+      expect(isVerified).toBeDefined();
+      expect(isVerified).toBe(false);
     });
 
-    it("Should return valid user", async () => {
-      const response = await authService.login(userPayload);
-
-      const verifyTokenResponse = await authService.verifyToken(
-        response.accessToken
+    it("Should return true", async () => {
+      const accessToken = await authService.generateToken(
+        clientPayload.id,
+        clientPayload.secret
       );
 
-      expect(verifyTokenResponse).toBeDefined();
-      expect(verifyTokenResponse.id).toBeDefined();
+      const isVerified = await authService.validateToken(accessToken);
+
+      expect(isVerified).toBeDefined();
+      expect(isVerified).toBe(true);
     });
   });
 });

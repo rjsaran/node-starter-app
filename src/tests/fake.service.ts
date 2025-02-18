@@ -2,22 +2,14 @@
 import { injectable } from "inversify";
 
 import { IAuthService } from "../app/auth/interfaces/auth.service.interface";
-import { LoginDto } from "../app/auth/dto/login.dto";
-import { LoginResponseDto } from "../app/auth/dto/login.response.dto";
-import { AuthUser } from "../core/middleware/auth.middleware";
 
 @injectable()
 export class FakeAuthService implements IAuthService {
-  login(_payload?: LoginDto): Promise<LoginResponseDto> {
-    return Promise.resolve({
-      accessToken: "jwt_token",
-    });
+  generateToken(_clientId: string, _clientSecret: string): Promise<string> {
+    return Promise.resolve("jwt_token");
   }
 
-  verifyToken(_token?: string): AuthUser {
-    return {
-      id: "123",
-      email: "account@nodestarterapp.com",
-    };
+  validateToken(_token?: string): boolean {
+    return true;
   }
 }

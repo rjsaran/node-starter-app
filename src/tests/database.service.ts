@@ -16,7 +16,7 @@ import { TYPES } from "../core/types";
 
 @injectable()
 export class TestDatabaseService implements IDatabaseService {
-  private static dataSource: DataSource;
+  private dataSource: DataSource;
 
   constructor(
     @inject(TYPES.ConfigService)
@@ -26,8 +26,8 @@ export class TestDatabaseService implements IDatabaseService {
   ) {}
 
   public async getConnection(): Promise<DataSource> {
-    if (TestDatabaseService.dataSource?.isInitialized) {
-      return TestDatabaseService.dataSource;
+    if (this.dataSource?.isInitialized) {
+      return this.dataSource;
     }
 
     try {
@@ -43,11 +43,9 @@ export class TestDatabaseService implements IDatabaseService {
         synchronize: true,
       };
 
-      TestDatabaseService.dataSource = await new DataSource(
-        datasourceConfig
-      ).initialize();
+      this.dataSource = await new DataSource(datasourceConfig).initialize();
 
-      return TestDatabaseService.dataSource;
+      return this.dataSource;
     } catch (err) {
       this.logger.error("Cannot establish database connection");
       this.logger.error(err);
@@ -62,5 +60,13 @@ export class TestDatabaseService implements IDatabaseService {
     const dataSource = await this.getConnection();
 
     return await dataSource.getRepository(entity);
+  }
+
+  public async closeConnection(): Promise<void> {
+    if (this.dataSource && this.dataSource.isInitialized) {
+      await this.dataSource.destroy();
+
+      this.logger.info("PostgreSQL connection closed.");
+    }
   }
 }

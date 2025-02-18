@@ -1,58 +1,44 @@
-import { container } from "../../../core/ioc.config";
-
-import { TYPES } from "../../../core/types";
-import { IAuthService } from "../interfaces/auth.service.interface";
-
-import { FakeAuthService } from "../../../tests/fake.service";
 import { agent } from "../../../tests/supertest.util";
-import { LoginDto } from "../dto/login.dto";
+import { GenerateTokenDTO } from "../auth.dto";
+import { ZERO_UUID } from "../../../core/constants";
 
 describe("Test: Auth Controller", () => {
-  let userPayload: LoginDto = {
-    email: "account@nodestarterapp.com",
-    password: "account@123",
+  let userPayload: GenerateTokenDTO = {
+    client_id: ZERO_UUID,
+    client_secret: ZERO_UUID,
   };
 
   beforeEach(() => {
     userPayload = {
-      email: "account@nodestarterapp.com",
-      password: "account@123",
+      client_id: ZERO_UUID,
+      client_secret: ZERO_UUID,
     };
-
-    container.rebind<IAuthService>(TYPES.IAuthService).to(FakeAuthService);
   });
 
-  describe("Sign In with a user", () => {
+  describe("Generate token with id and secret", () => {
     it("Index", (done) => {
-      agent.post("/api/auth/login").send(userPayload).expect(200, done);
+      agent.post("/api/auth/token").send(userPayload).expect(200, done);
     });
 
     it("Access token should be present", async () => {
-      const response = await agent.post("/api/auth/login").send(userPayload);
-
+      const response = await agent.post("/api/auth/token").send(userPayload);
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty("accessToken");
+      expect(response.body).toHaveProperty("access_token");
     });
 
-    it("Should return 400: Invalid email", async () => {
-      userPayload.email = "124";
-
-      const response = await agent.post("/api/auth/login").send(userPayload);
-
+    it("Should return 400: Invalid client_secret", async () => {
+      userPayload.client_secret = "";
+      const response = await agent.post("/api/auth/token").send(userPayload);
       expect(response.body).toHaveProperty("statusCode");
       expect(response.body.statusCode).toBe(400);
     });
 
-    it("Should return 400: Invalid password", async () => {
-      userPayload.password = "";
-
-      const response = await agent.post("/api/auth/login").send({
-        email: userPayload.email,
-        password: "",
-      });
+    it("Should return 401: Invalid client_id", async () => {
+      userPayload.client_id = "00000000-0000-0000-0000-000000000001";
+      const response = await agent.post("/api/auth/token").send(userPayload);
 
       expect(response.body).toHaveProperty("statusCode");
-      expect(response.body.statusCode).toBe(400);
+      expect(response.body.statusCode).toBe(401);
     });
   });
 });
